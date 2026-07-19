@@ -94,6 +94,21 @@ ARG OMNIROUTE_BUILD_MEMORY_MB=4096
 ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB}"
 
 COPY . ./
+
+# Railway compatibility patches for upstream v3.8.49 source issues.
+# 1) Use the Stepfun package entry that exists in the installed @lobehub/icons version.
+RUN sed -i "s|@lobehub/icons/es/Stepfun/components/Color|@lobehub/icons/es/Stepfun|g" \
+    /app/src/shared/components/lobeProviderIcons.ts
+
+# 2) Ensure the reasoning-routing document has a valid MDX title frontmatter field.
+RUN python3 -c "from pathlib import Path; p=Path('/app/docs/routing/REASONING_ROUTING.md'); s=p.read_text(); lines=s.splitlines(); \
+assert lines, 'REASONING_ROUTING.md is empty'; \
+end=(lines[1:].index('---')+1 if lines[0].strip()=='---' and '---' in lines[1:] else -1); \
+front=lines[1:end] if end>0 else []; \
+has_title=any(x.lstrip().startswith('title:') for x in front); \
+new=(lines[:1]+(['title: \"Reasoning Routing\"'] if not has_title else [])+lines[1:] if end>0 else ['---','title: \"Reasoning Routing\"','description: \"Configure reasoning-based routing in OmniRoute.\"','---','']+lines); \
+p.write_text('\n'.join(new)+'\n')"
+
 RUN mkdir -p /app/data && npm run build
 
 # ── Runner base ────────────────────────────────────────────────────────────
