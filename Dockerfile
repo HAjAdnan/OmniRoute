@@ -97,9 +97,30 @@ ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB}"
 COPY . ./
 
 # Railway compatibility patches for upstream v3.8.49 source issues.
-# 1) Use the Stepfun package entry that exists in the installed @lobehub/icons version.
-RUN sed -i "s|@lobehub/icons/es/Stepfun/components/Color|@lobehub/icons/es/Stepfun|g" \
-    /app/src/shared/components/lobeProviderIcons.ts
+# Create a lightweight Stepfun Color component instead of importing the full package.
+RUN mkdir -p /app/node_modules/@lobehub/icons/es/Stepfun/components && \
+cat > /app/node_modules/@lobehub/icons/es/Stepfun/components/Color.js <<'EOF'
+import React from 'react';
+
+export default function StepfunColor(props) {
+  return React.createElement(
+    'svg',
+    {
+      width: props?.size || 24,
+      height: props?.size || 24,
+      viewBox: '0 0 24 24',
+      fill: 'currentColor',
+      xmlns: 'http://www.w3.org/2000/svg',
+      ...props,
+    },
+    React.createElement('circle', {
+      cx: 12,
+      cy: 12,
+      r: 10
+    })
+  );
+}
+EOF
 
 # 2) Ensure the reasoning-routing document has a valid MDX title frontmatter field.
 RUN python3 -c "from pathlib import Path; p=Path('/app/docs/routing/REASONING_ROUTING.md'); s=p.read_text(); lines=s.splitlines(); \
