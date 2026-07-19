@@ -62,7 +62,7 @@ RUN test -f package-lock.json \
 # instead of `npx --yes`, which would install an arbitrary registry version
 # on-demand and run its lifecycle scripts (Sonar docker:S6505).
 RUN npm ci --no-audit --no-fund --legacy-peer-deps --ignore-scripts \
-  && npm install --no-save --no-audit --no-fund --legacy-peer-deps --ignore-scripts antd@5 \
+  && npm install --no-save --no-audit --no-fund --legacy-peer-deps --ignore-scripts antd@5 @lobehub/ui \
   && (cd node_modules/better-sqlite3 \
       && node /usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js rebuild) \
   && node -e "require('better-sqlite3')(':memory:').close()"
